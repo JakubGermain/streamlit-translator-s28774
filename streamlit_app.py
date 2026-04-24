@@ -1,5 +1,5 @@
 import streamlit as st
-from transformers import pipeline
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, pipeline
 
 
 INDEX_NUMBER = "s28774"
@@ -16,8 +16,9 @@ st.set_page_config(
 
 @st.cache_resource(show_spinner=False)
 def load_translator():
-    return pipeline("translation", model=TRANSLATION_MODEL)
-
+    tokenizer = AutoTokenizer.from_pretrained(TRANSLATION_MODEL)
+    model = AutoModelForSeq2SeqLM.from_pretrained(TRANSLATION_MODEL)
+    return tokenizer, model
 
 
 @st.cache_resource(show_spinner=False)
@@ -37,7 +38,7 @@ option = st.selectbox(
     "Opcje",
     [
         "Tłumaczenie tekstu EN -> DE",
-        "Wydźwięk emocjonalny tekstu ",
+        "Wydźwięk emocjonalny tekstu",
     ],
 )
 
@@ -49,10 +50,11 @@ if st.button("Uruchom", type="primary"):
     elif option == "Tłumaczenie tekstu EN -> DE":
         try:
             with st.spinner("Ładuję model i tłumaczę tekst..."):
-                translator = load_translator()
-                result = translator(text, max_length=512)
+                tokenizer, model = load_translator()
+                tokens = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+                output = model.generate(**tokens, max_length=512)
 
-            translated_text = result[0]["translation_text"]
+            translated_text = tokenizer.decode(output[0], skip_special_tokens=True)
             st.success("Tłumaczenie gotowe.")
             st.subheader("Wynik")
             st.write(translated_text)
