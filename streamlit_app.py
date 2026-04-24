@@ -16,7 +16,8 @@ st.set_page_config(
 
 @st.cache_resource(show_spinner=False)
 def load_translator():
-    return pipeline("translation_en_to_de", model=TRANSLATION_MODEL)
+    return pipeline("translation", model=TRANSLATION_MODEL)
+
 
 
 @st.cache_resource(show_spinner=False)
